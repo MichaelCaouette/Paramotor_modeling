@@ -1,0 +1,8 @@
+save_player_vx1 = np.array([])
+save_player_vy1 = np.array([])
+save_player_phi = np.array([])
+save_player_vphi = np.array([])
+save_player_vx = np.array([])
+save_player_vx = np.array([])
+save_player_state_thrust = np.array([])
+save_player_state_brake  = np.array([])

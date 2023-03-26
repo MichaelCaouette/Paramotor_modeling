@@ -1,0 +1,8 @@
+2023-03-04
+Script game_paramotor.py, line 240. 
+The game should run, but they are some bugs in the console. 
+
+
+2023-03-26
+I got the game to run and show the time-evolution of the dynamical variables. 
+Now I need to figure out why the dynamics is wrong (see the online notebook for a couple of observations and additional note)

@@ -1,0 +1,32 @@
+
+- Plot of the system and the forces (with arrows and label)
+- Create a solver for the steady state (constant speed, when all the forces are zero). 
+--> Find the steady speed
+
+- Create a mini 2D video-game where the user set the gaz and break the wing. 
+  --> I have the model for the game (periodic cloud map with an aircaft)
+      Now I just need to implement the equation of motion a draw a paramotor lol
+
+- Make a toy model and solve it analyttically. 
+--> Verify that the numerical model matches
+
+
+        # # 230 camber-line profile
+        # # From https://en.wikipedia.org/wiki/NACA_airfoil
+        # k1 = 15.957
+        # r = 0.2025
+        
+        # x = np.linspace(0, 1, N_pts)
+        
+        # curve_1 = (k1/6)*(x**3-3*r*x**2 + r**2*(3-r)*x)
+        # u1 = np.heaviside(x-r, 1)
+        
+        
+        # curve_2 = (k1*r**3/6)*(1-x)
+        # u2 = np.heaviside(r-x, 1)
+        
+        # yc = u1*curve_1 + u2*curve_2
+        
+        # return (x, yc)
+        
+        

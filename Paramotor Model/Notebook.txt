@@ -1,0 +1,201 @@
+Goal: 
+Determine the dynamic of the paramotor, using a simple physical model. 
+With the help of the Newton F=ma law, I would lile to reproduce some phenomena
+of the paramotor, including:
+- Constant altitude flight (enough trust force for this)
+- Increase in altitude (full throttle)
+- Glide mode (no throttle, steady velocity)
+- Oscillator (for example, when we just take off, or vary the trust force). 
+- Backflip or Frontflip ?
+If I get a 3D model:
+- Turn
+- Roll up
+- Acrobatic/stunts
+
+
+2022-08-16
+The airfoila and motor is made. 
+We can now build the paramotor, by linking the variable of the two components. 
+But how ?
+It doesn't seem trivial to have a simple model that bounds the wing and the motor with a string. 
+Maybe a bit like the double pendulum, where it is not easy to figure out all the forces. 
+I may need to add an extra information: the distance between the wing and the motor, such that
+there is now a torque on the system. 
+
+Actually, making the math shows that it is a type of system that I never considered before:
+Two masses (the wing and the motor) that experiences different forces and are linked together. 
+It is like a constrained system. They each receive independ forces, but the distance between 
+them must never change. I must find how to solve this problem (at least numerically, in the form 
+of differential equation).
+
+Okay done. I have the equation of motion for the angle and tension in the string linking the 
+two masses. The dynamique depends on the two masses and the two forces acting on the masses. 
+
+
+2023-01-21
+As a reminder of the structure of the code so far:
+The class 'TwoMassOneString' defines the general system of equation of
+two masses linked by a string, where each masses is subject to an independent force. 
+The script is tested with the simple pendulum configuration. And it works. 
+
+The script 'airfoil.py' defines the forces acting on the wing. 
+The script 'motor.py' defines the forces on actinf on the motor. 
+The script 'paramotor.py' defines the whole system. 
+
+It is this script (paramotor.py) that should be used to describe the dynamic of the flight. 
+
+The problem: each script work well individually, but the whole system, paramotor.py, gives
+divergence result over time. 
+- Is it the solver ?
+- Is it because I am not coupling the forces (the orientation) as it should ?
+I am coupling them through F_motor and F_wing. 
+Note: When I add some fraction of pi to the angle of attack, it impacts the direction of the divergence. 
+Therefore, the issue might be the origin of the angle of attack ? 
+Like because we exceed the stall angle ?
+
+The aim would be to have y1(t) and xx=1(t) to be linear in time, because of the constant trust 
+regime. 
+
+My next step to debug will be to write down all the equations and make sure that 
+everything is making sense !
+
+
+2023-01-22
+I am now investigate the forces on the airfoil. 
+I will plot the various forces as the angle of attack changes. 
+
+Okay I plotted it (See figure 2023_01_22 Airfoil forces checkup 1)
+The velovity is (vx, vy) = (11, 0) m/s
+One weird thing to note is the angle of the lift force. 
+It is changing disocntinously from 0,180 and +90. 
+In the regime of flight, it is fixed at 90 degree. 
+I think that the oscillation from 0 to 180 is a numerical artefact because the magnitude is zero. 
+Otherwise, all the angles are constant in the regime of flight. 
+The biggest force is the lift and it tops at 3500 Newton. 
+This is way enough to lift me and my motor: about 100kg, time 10m/s^2 = 1000 N
+Actually, the force is exceeding my own weight (But the order of magnitude is right). 
+Is it why we see a divergence in the dynamic ? 
+Because it predicts an upward acceleration. 
+
+Yeah, I think that we found one source of the bug. 
+The lift force seems exgerated. I any case, a wing should not lead to an
+upward acceleration in the absence of a trust force. 
+Now, I have to think more deeply to my aerodynamical model. 
+- How can I predict a constant gliding regime (downward speed, zero acceleation). 
+It will be the time to play more with the equation.
+
+Okay I have checked the lift-drag force equation and they seem well implemented. 
+Something to do is to solve for the steady state velocity. 
+In vector form, the drag+lift+gravity=0 equation gives implicitely the steady state 
+velocity. This is assuming a constant (predetermined) Angle-ofAttack. 
+It is an implicit equation and should be solved either analytically of numerically. 
+I would like to plot this steady state velocity as a function of the angle-of-attack. 
+
+This would be a check up for our model: does the velocoties agrees with the 
+speed of my glider ?
+Let's do that !
+
+Okay nice. I am able to get analytical result for the steady state !! :D 
+(I will picture the results at some point and put them in the 
+And the result passes certain sanity check:
+- The steady velocity is always in the lower cadrant (angle is from 0 to -90 deg)
+  This indicates a gliding, which is what we expect with no trust force. 
+- The more drag, the more the direction is toward -90deg 
+- The more lift, the more the direction is toward the x direction (0 deg)
+- The velocity increase with mg
+- The velocity decrease equallly with the drag and lift force
+  This make sense for the drag. It also make sense with the lift, if we think 
+  That the better the lift coefficient, the lower the speed as to be to generate a lift. 
+
+Next idea: include a trust force, just to see the analytical interpretation
+           (without a pendulum effect like the paramotor). 
+
+A quick test indicates better values !
+For 100 kg and an angle of attack of 5 degree, I am getting 25 km/h and -3 deg. 
+This means an almost perfect glide (tan(5deg)=0.06 of glide ratio). 
+Using such a speed in and calculating the lift also gives a peak lift near 1000N. 
+Therefore the equations are consistents. 
+
+Also an extra note for the full paramotor system: can the divergence come from the 
+unrealistic initial value ? Like if I am using an out-of-flight-regime velocity and angle of angle for the initial state. 
+So far, a quick readjustement of these initial variable doesn't do the job. But I will have to dive deeper in the right value for these initial variables. 
+
+
+
+2023-01-24
+For the airfoil alone, I am analysing how the steady state velocity evolve with the angle of attack. I put a mass of 100 kg to the wing, mimicing my total mass in paramotor. 
+The curve works, but wait !
+
+I am testing that the sum of the forces is zero when we set the angle of attack and velocity of the steady state. But it is not zero. The x component is zero, but not the y component. 
+Hah ! I think that it is the mass is not updating. Because it is the gravitational force that is not good. 
+Okay. I fixed that and now everythiong works. The sum of force is zeros !! :D
+
+See the figure '2023_01_24 Airfoil velocity and forces VS AngleOfAttack.png' 
+I am showing the result of the velocities and the amplitude of the forces as the angle of attack changes. 
+We see well how the lift and drag froce exhange there amplitude. 
+The lift force soon reach the amplitude of the Gravity weight. 
+
+The next step is to verify how realitistic the values are. Does my wing behave really like that ?
+Are the amplitude right ? Is the maximum horizontal speed right ? 
+And what about the vertical speed ? It is very close to zero. Do I really get -1km/h of vertical speed for the right angle of attack ? I doubt it, and should check that up !
+
+
+2023-02-16
+An hypothesis that I have for the divergence is that the solver is diverging with this ODE.
+Yeah I think that this is the issue. Because I am getting different result depending on the solver used. I use various method with scipy solver:
+https://docs.scipy.org/doc/scipy/reference/generated/scipy.integrate.solve_ivp.html
+ All diverging with my system, though lol. 
+One of them, LSODA, is very very long when ran. 
+
+The RK45 method doesn't diverge when the time is bellow one second. 
+It predicts correctly that y1 is decreasing with time hahaha
+(see 2023_02_16 Solution short time interval.png)
+
+Next step: 
+- Develope my own solver for this particular problem ? 
+ I should write down the equation and figure out the loop-hole, and find how to avoid them. 
+- To help the solver, DON'T INTEGRATE X AND Y !
+   Those variable are dummy, they don't play a role in the dynamic, right ?
+   This should at least simplify the problem.
+
+
+2023-02-19
+I will remake the ODE solver to solve only the speed, not the spatial position. This is because the force acting on the system doesn't depend on the position of the system. 
+Therefore we will less variable.
+
+I will reduce the system even more:
+The force on the top mass depends on vx, vy and phi (it is an airfoil)
+The force on the bottom mass depends only on phi (it is a trust force, for which phi determines the angle). 
+Hah watch out ! We actually need dphi/dt, because it impacts the tension in the string.
+
+Would there be a better way to ddo it without solving for dphi/dt ? Because I feel that this is redondant. 
+
+Okay. I tested the 4 variables system (vx, vy, phi, vphi) with various different solver. It is always starting to diverge around 0.4 sec. 
+ Check the notebook figure:
+2023_02_19 solver test v1 METHOD
+I expect the behavior to be stable. Like I expect the parameters to reach a steady state, because of the friction (in the drag force). 
+
+Note: SHOULD THERE BE A DRAG FORCE IN THE MOTOR TOO ? Because actually, the passager is like a draggy ball. 
+
+Can the divergence comes from a bad just of time step ? It is not clear, because using the keyword 'rtol=1e-4' doesn't help.
+
+Nah, playing with atol and rtol doesn't seems to change the oscillatory/diverging behavior. 
+The next steps are:
+
+- Verify the convergence of the solution
+  Should I add a drag term for the pilot ? This could prevent non-linearity to occur. 
+  The drag could also depends on dphi/dt, because I expect the rotation of the wing to self-stop. 
+- Define my own basic solver (Newton-Method) just to see the range of convergence. 
+
+2023-03-02
+I got a realy for why it might diverge: The lift coefficient it zero at the end of the simulation. This is maybe why it diverge, or it is a consequence of the divergence of the other variables. 
+To investigate this, I will define my own solver to keep track of each variable.
+
+
+
+
+
+
+
+
+

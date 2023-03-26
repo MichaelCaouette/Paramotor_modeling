@@ -1,0 +1,21 @@
+For the lift equation:
+https://www.engineersedge.com/fluid_flow/aerodynamics_airfoil_theory_equations__15301.htm
+
+For a curve of the lift coefficient
+https://en.wikipedia.org/wiki/Lift_coefficient
+
+
+To DO:
+Input the Drag and lift coefficient for real value. 
+
+One class for the airfoil. 
+One class for the paramotor mass. 
+One class for both of them (linked, as a rigid body)
+One class to solve F = ma (in 2D or 3D)
+
+Check that I reach 40 or 50 km/h, from Daytona:
+https://www.itv-wings.com/fr/voiles-parapente-paramoteur/daytona.html
+
+
+
+
